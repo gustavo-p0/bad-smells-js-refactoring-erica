@@ -1,3 +1,7 @@
+// ── Constantes de negócio ──────────────────────────────────────────────────
+const PRIORITY_THRESHOLD   = 1000;
+const USER_VALUE_THRESHOLD = 500;
+
 // ── Formatadores (Replace Conditional with Polymorphism) ──────────────────
 
 class CsvFormatter {
@@ -57,13 +61,13 @@ export class ReportGenerator {
 
     for (const item of items) {
       if (user.role === 'ADMIN') {
-        if (item.value > 1000) {
+        if (item.value > PRIORITY_THRESHOLD) {
           item.priority = true;
         }
         report += formatter.formatItem(item, user);
         total += item.value;
       } else if (user.role === 'USER') {
-        if (item.value <= 500) {
+        if (item.value <= USER_VALUE_THRESHOLD) {
           report += formatter.formatItem(item, user);
           total += item.value;
         }
