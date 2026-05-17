@@ -47,6 +47,22 @@ function getFormatter(reportType) {
   throw new Error(`Formato desconhecido: ${reportType}`);
 }
 
+// ── Lógica de negócio ──────────────────────────────────────────────────────
+
+function isItemVisibleToUser(item, user) {
+  if (user.role === 'ADMIN') return true;
+  if (user.role === 'USER')  return item.value <= USER_VALUE_THRESHOLD;
+  return false;
+}
+
+function applyBusinessRules(item, user) {
+  const clone = { ...item };
+  if (user.role === 'ADMIN' && clone.value > PRIORITY_THRESHOLD) {
+    clone.priority = true;
+  }
+  return clone;
+}
+
 // ── ReportGenerator refatorado ────────────────────────────────────────────
 
 export class ReportGenerator {
@@ -59,19 +75,12 @@ export class ReportGenerator {
     let report = formatter.header(user);
     let total = 0;
 
-    for (const item of items) {
-      if (user.role === 'ADMIN') {
-        if (item.value > PRIORITY_THRESHOLD) {
-          item.priority = true;
-        }
-        report += formatter.formatItem(item, user);
-        total += item.value;
-      } else if (user.role === 'USER') {
-        if (item.value <= USER_VALUE_THRESHOLD) {
-          report += formatter.formatItem(item, user);
-          total += item.value;
-        }
-      }
+    for (const rawItem of items) {
+      if (!isItemVisibleToUser(rawItem, user)) continue;
+
+      const item = applyBusinessRules(rawItem, user);
+      report += formatter.formatItem(item, user);
+      total += item.value;
     }
 
     report += formatter.footer(total);
